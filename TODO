@@ -1,0 +1,26 @@
+### TODO list
+
+1. Analyze and audit cargo dependecies;
+1. Leverage `tokio` tracing capability;
+1. Decide integration of TSA-based functionality for client enrollment verification;
+1. Consider upgrade to `picky-asn1-x509` version `0.14.5`;
+1. EK certificate verification, server AK certificate;
+1. Sealing under TPM compound policy `policyor`;
+1. Linux IMA subsystem auto-configuration (kernel config check and kernel parameters setup);
+1. Linux IMA policy `/etc/ima/ima-policy` assertion: ensure program config file is located on partition for which IMA measurement is set up;
+1. Stored on disk TPM (UEFI) log encryption with TPM make/activate credential functionality;
+1. Store boot counter and policy value on TPM persistent handle instead storing on disk. Additionally, encrypt the values with TPM make/activate credential;
+1. Detailed description of local attestation failure;
+1. Detailed description of remote attestation failure;
+1. Desktop/console user notifications of attestation failure, boot counter mismatch;
+1. Assess necessity to keep policy digests;
+1. Payload encryption with user-provided symmetric key or with TPM make/activate credential;
+1. Add server database backends: PostgreSQL, MySQL, not only SQLite.
+1. Server requests rate limitiing;
+1. Server privilege drop after binding to lower port.
+1. Multiplex server log stream to database (if enabled).
+1. Include server name in TOTP generator name.
+1. Add server response errors in server log.
+1. Filter out log messages from `tss_esapi` crate (and library)
+
+
