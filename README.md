@@ -56,12 +56,12 @@ sudo systemctl enable paranoid-boot.service
 
 #### Dependencies
 
-Only `tpm2-tss` library (TSS 2.0 Enhanced System API) is required for client TPM interaction. You have to install `tpm2-tools` package using your package manager:
+Only `tpm2-tss` library (TSS 2.0 Enhanced System API) is required for client TPM interaction. You have to install it using your package manager:
 ```bash
 # For Debian-based distributions
-sudo apt-get install tpm2-tools
+sudo apt-get install tpm2-tools libtss2-dev
 # For RPM-based distributions
-sudo dnf install tpm2-tools
+sudo dnf install tpm2-tools tss2-devel
 ```
 
 #### Build from source
