@@ -4,7 +4,7 @@ use anyhow::{Context, Result};
 use paranoid_system::{
     common::privileges_adjust,
     env::{
-        Env, Params, ParamsIntegrtySrv, ParamsIntegrtySrvAction, constants::*,
+        Env, Params, ParamsIntegritySrv, ParamsIntegritySrvAction, constants::*,
     },
     log::*,
     server::launcher::{server_launch, shutdown_signal_future},
@@ -24,7 +24,7 @@ use tokio::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let env = Arc::new(ParamsIntegrtySrv::new()?);
+    let env = Arc::new(ParamsIntegritySrv::new()?);
 
     if &env.common_params.user != "tss" {
         // if only non-default value is set, drop privileges
@@ -36,9 +36,9 @@ async fn main() -> Result<()> {
     let (shutdown_trigger_tx, shutdown_trigger_rx) = oneshot::channel();
     shutdown_signal_hook(env.clone(), shutdown_trigger_rx);
 
-    if let Some(ParamsIntegrtySrvAction::Serve) = env.params.action {
+    if let Some(ParamsIntegritySrvAction::Serve) = env.params.action {
         server_launch(env).await?;
-    } else if let Some(ParamsIntegrtySrvAction::Cleanup) = env.params.action {
+    } else if let Some(ParamsIntegritySrvAction::Cleanup) = env.params.action {
         cleanup(env).await?;
     } else {
         // default
@@ -50,7 +50,7 @@ async fn main() -> Result<()> {
     Ok(())
 }
 
-fn shutdown_signal_hook(env: Arc<Env<ParamsIntegrtySrv>>, rx: Receiver<bool>) {
+fn shutdown_signal_hook(env: Arc<Env<ParamsIntegritySrv>>, rx: Receiver<bool>) {
     spawn(async move {
         trace!("Setting up signal handler...");
         shutdown_signal_future().await;
@@ -77,7 +77,7 @@ fn shutdown_signal_hook(env: Arc<Env<ParamsIntegrtySrv>>, rx: Receiver<bool>) {
 }
 
 /// Cleanup server data
-async fn cleanup(env: Arc<Env<ParamsIntegrtySrv>>) -> Result<()> {
+async fn cleanup(env: Arc<Env<ParamsIntegritySrv>>) -> Result<()> {
     info!("Cleaning up server data directories ...");
     let data_dir = PathBuf::from(&env.params.data_dir);
     if data_dir.exists() {

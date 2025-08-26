@@ -217,7 +217,7 @@ pub trait Params: Clone + Sized + Parser {
     name = "paranoid-boot - system launch integrity measurement with TPM and Linux IMA",
     version
 )]
-pub struct ParamsIntegrtyBoot {
+pub struct ParamsIntegrityBoot {
     //---- paranoid-boot specific options
     /// Data directory
     #[arg(short, long, default_value = "/var/lib/paranoid-system/client/boot")]
@@ -241,8 +241,8 @@ pub struct ParamsIntegrtyBoot {
     pub attest_remote: bool,
 
     /// Remote attestation server URL
-    #[arg(long)]
-    pub server_url: Option<String>,
+    #[arg(long, default_value_t = String::from("https://counterinsider.dev"))]
+    pub server_url: String,
 
     /// Remote attestation server TLS certificate fingerprint
     ///
@@ -253,7 +253,7 @@ pub struct ParamsIntegrtyBoot {
 
     /// Do not verify server TLS certificate
     ///
-    /// Implied as set if `server_cert_fingerprint` is given
+    /// Implied if `server_cert_fingerprint` is given
     #[arg(long, action)]
     pub server_insecure: bool,
 
@@ -264,7 +264,7 @@ pub struct ParamsIntegrtyBoot {
     /// The payloads are encrypted with key stored in TPM before sending to the server and decrypted when downloaded.
     /// Note again that for updating payloads new enrollment required.
     /// Ensure that the files are accessible by the `user` (see --user option) and have unique names.
-    /// After upload the files can be manually deleted. When downloaded the files are stored in `/run/tss/secured-payloads` folder.
+    /// After upload, the files can be manually deleted. When downloaded, the files are stored in `/run/tss/secured-payloads` folder.
     #[arg(long)]
     pub secured_payloads: Option<Vec<String>>,
 
@@ -279,18 +279,24 @@ pub struct ParamsIntegrtyBoot {
     pub config: CommonParams,
 
     #[command(subcommand)]
-    pub action: Option<ParamsIntegrtyBootAction>,
+    pub action: Option<ParamsIntegrityBootAction>,
 }
 
 #[derive(Subcommand, Debug, Clone)]
-pub enum ParamsIntegrtyBootAction {
+pub enum ParamsIntegrityBootAction {
+    /// Configure system - enable IMA, install systemd service
+    Configure,
+    /// Generate TPM attestation key and enroll in attestation server
     Enroll,
+    /// Establish new integrity baseline using current TPM PCR values and UEFI, IMA logs
     Fix,
+    /// Assert system launch integrity against previously established integrity baselines
     Attest,
+    /// Cleanup data directory, resetting enrollment state and removing attestation key
     Cleanup,
 }
 
-impl Params for ParamsIntegrtyBoot {
+impl Params for ParamsIntegrityBoot {
     fn new() -> Result<Env<Self>> {
         Env::new("paranoid-boot")
     }
@@ -362,7 +368,7 @@ impl Params for ParamsIntegrtyBoot {
                     }
                 } else if option_id == "server_url" {
                     if let Ok(v) = config.get(option_config_id) {
-                        updated_options.server_url = Some(v);
+                        updated_options.server_url = v;
                     }
                 } else if option_id == "server_cert_fingerprint" {
                     if let Ok(v) = config.get(option_config_id) {
@@ -428,8 +434,10 @@ impl Params for ParamsIntegrtyBoot {
 
         common_matches
             .insert("data_dir".into(), Some(updated_options.data_dir.clone()));
-        common_matches
-            .insert("server_url".into(), updated_options.server_url.clone());
+        common_matches.insert(
+            "server_url".into(),
+            Some(updated_options.server_url.clone()),
+        );
         common_matches.insert(
             "server_cert_fingerprint".into(),
             updated_options.server_cert_fingerprint.clone(),
@@ -455,15 +463,15 @@ impl Params for ParamsIntegrtyBoot {
     }
 }
 
-/// paranoid-srv - attestation server checking client system integrity and TPM quotes.
+/// paranoid-srv - attestation server checking client system integrity, including TPM quotes.
 ///
 /// HTTP server with TLS support which asserts client system integrity against previously established baselines.
 #[derive(Parser, Default, Clone)]
 #[command(
-    name = "paranoid-srv - attestation server checking client system integrity and TPM quotes",
+    name = "paranoid-srv - attestation server checking client system integrity, including TPM quotes",
     version
 )]
-pub struct ParamsIntegrtySrv {
+pub struct ParamsIntegritySrv {
     //---- paranoid-srv specific options
     /// Data directory
     #[arg(short, long, default_value = "/var/lib/paranoid-system/server")]
@@ -514,16 +522,16 @@ pub struct ParamsIntegrtySrv {
     pub config: CommonParams,
 
     #[command(subcommand)]
-    pub action: Option<ParamsIntegrtySrvAction>,
+    pub action: Option<ParamsIntegritySrvAction>,
 }
 
 #[derive(Subcommand, Debug, Clone)]
-pub enum ParamsIntegrtySrvAction {
+pub enum ParamsIntegritySrvAction {
     Serve,
     Cleanup,
 }
 
-impl Params for ParamsIntegrtySrv {
+impl Params for ParamsIntegritySrv {
     fn new() -> Result<Env<Self>> {
         Env::new("paranoid-srv")
     }
@@ -650,7 +658,7 @@ impl Params for ParamsIntegrtySrv {
     name = "paranoid-rt - measure run-time system integrity using IMA",
     version
 )]
-pub struct ParamsIntegrtyRt {
+pub struct ParamsIntegrityRt {
     //---- paranoid-rt specific options
     /// Data directory
     #[arg(
@@ -665,16 +673,16 @@ pub struct ParamsIntegrtyRt {
     pub config: CommonParams,
 
     #[command(subcommand)]
-    pub action: Option<ParamsIntegrtyRtAction>,
+    pub action: Option<ParamsIntegrityRtAction>,
 }
 
 #[derive(Subcommand, Debug, Clone)]
-pub enum ParamsIntegrtyRtAction {
+pub enum ParamsIntegrityRtAction {
     Daemon,
     Reset,
 }
 
-impl Params for ParamsIntegrtyRt {
+impl Params for ParamsIntegrityRt {
     fn new() -> Result<Env<Self>> {
         Env::new("paranoid-rt")
     }
@@ -765,7 +773,7 @@ pub struct CommonParams {
     #[arg(long, default_value_t = 5 as u32)]
     pub max_system_states: u32,
 
-    /// Do not use HTTPS. Plain text connection might expose boot logs to MiTM
+    /// Do not use HTTPS. Plain text connection might expose UEFI logs to MiTM
     #[arg(long, default_value_t = false)]
     pub no_https: bool,
 }

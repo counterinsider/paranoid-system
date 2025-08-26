@@ -5,7 +5,7 @@ use nix::sys::stat::{Mode, umask};
 use paranoid_system::{
     boot::{self, ima::extend_ima_log},
     common::privileges_adjust,
-    env::{Params, ParamsIntegrtyBoot, ParamsIntegrtyBootAction},
+    env::{Params, ParamsIntegrityBoot, ParamsIntegrityBootAction},
     log::*,
 };
 use std::{process::exit, sync::Arc};
@@ -18,29 +18,21 @@ async fn main() -> Result<()> {
             .ok_or(anyhow!("Failed to set up process umask"))?,
     );
 
-    let env = Arc::new(ParamsIntegrtyBoot::new()?);
+    let env = Arc::new(ParamsIntegrityBoot::new()?);
 
     if let Some(
-        ParamsIntegrtyBootAction::Fix | ParamsIntegrtyBootAction::Attest,
+        ParamsIntegrityBootAction::Fix | ParamsIntegrityBootAction::Attest,
     ) = env.params.action
     {
-        /*
-         * TODO: system configuration:
-         *
-         * 1. checking kernel configuration /boot/config-* for CONFIG_IMA=y parameter;
-         * 2. adding ima=on ima_policy=tcb (ima_template=ima-ng) to kernel parameters;
-         * 3. checking /etc/ima/ima-policy IMA policy.
-         */
-
         // Read boot process critical files early as root
         info!("Extending IMA log with pre-configured files list ...");
         extend_ima_log(env.clone()).await?;
     }
 
     if let Some(
-        ParamsIntegrtyBootAction::Enroll
-        | ParamsIntegrtyBootAction::Fix
-        | ParamsIntegrtyBootAction::Attest,
+        ParamsIntegrityBootAction::Enroll
+        | ParamsIntegrityBootAction::Fix
+        | ParamsIntegrityBootAction::Attest,
     ) = env.params.action
     {
         privileges_adjust(&env.common_params.user, env.clone())
@@ -65,13 +57,23 @@ async fn main() -> Result<()> {
         };
     });
 
-    if let Some(ParamsIntegrtyBootAction::Enroll) = env.params.action {
+    if let Some(ParamsIntegrityBootAction::Configure) = env.params.action {
+        /*
+         * TODO: system configuration:
+         *
+         * 1. checking kernel configuration /boot/config-* for CONFIG_IMA=y parameter;
+         * 2. adding ima=on ima_policy=tcb (ima_template=ima-ng) to kernel parameters;
+         * 3. checking /etc/ima/ima-policy IMA policy.
+         */
+
+        //todo!();
+    } else if let Some(ParamsIntegrityBootAction::Enroll) = env.params.action {
         boot::enroll(env.clone()).await?;
-    } else if let Some(ParamsIntegrtyBootAction::Fix) = env.params.action {
+    } else if let Some(ParamsIntegrityBootAction::Fix) = env.params.action {
         boot::fix(env.clone()).await?;
-    } else if let Some(ParamsIntegrtyBootAction::Attest) = env.params.action {
+    } else if let Some(ParamsIntegrityBootAction::Attest) = env.params.action {
         boot::attest(env.clone()).await?;
-    } else if let Some(ParamsIntegrtyBootAction::Cleanup) = env.params.action {
+    } else if let Some(ParamsIntegrityBootAction::Cleanup) = env.params.action {
         boot::cleanup(env.clone()).await?;
     } else {
         unimplemented!();

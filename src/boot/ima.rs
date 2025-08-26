@@ -5,7 +5,9 @@
 use crate::env::GLOBAL_VAR_IMA_EXTENDED_LOG_2;
 use crate::{
     common::*,
-    env::{Env, GLOBAL_VAR_IMA_EXTENDED_LOG, ParamsIntegrtyBoot, constants::*},
+    env::{
+        Env, GLOBAL_VAR_IMA_EXTENDED_LOG, ParamsIntegrityBoot, constants::*,
+    },
     log::*,
 };
 use anyhow::{Context, Result, anyhow, ensure};
@@ -20,7 +22,7 @@ use zeroize::Zeroize;
 
 /// Read pre-configured file set to add them to IMA measurement log.
 /// The function must be invoked before privileges drop.
-pub async fn extend_ima_log(env: Arc<Env<ParamsIntegrtyBoot>>) -> Result<()> {
+pub async fn extend_ima_log(env: Arc<Env<ParamsIntegrityBoot>>) -> Result<()> {
     let data_dir = PathBuf::from(&env.params.data_dir);
     // Important static files
     let static_files = [
@@ -262,7 +264,7 @@ pub(super) async fn read_ima_log() -> Result<(String, String)> {
 
 /// Read and write collected boot aggregates in format `<current-timestamp>:<boot-aggregate>`
 pub(super) async fn collect_boot_aggregates(
-    env: Arc<Env<ParamsIntegrtyBoot>>,
+    env: Arc<Env<ParamsIntegrityBoot>>,
     current_ba: String,
 ) -> Result<String> {
     let data_dir = PathBuf::from(&env.params.data_dir);
@@ -327,7 +329,7 @@ mod tests {
     async fn create_mock_env(
         tmp_data_dir: &TempDir,
         tmp_config_dir: &TempDir,
-    ) -> Result<Arc<Env<ParamsIntegrtyBoot>>> {
+    ) -> Result<Arc<Env<ParamsIntegrityBoot>>> {
         let data_dir = tmp_data_dir.path().to_path_buf();
         let config_dir = tmp_config_dir.path().to_path_buf();
         let config_file = config_dir.join("config.toml");
@@ -362,7 +364,7 @@ mod tests {
         )
         .await?;
 
-        let mut env = ParamsIntegrtyBoot::new()?;
+        let mut env = ParamsIntegrityBoot::new()?;
         env.common_params.config_file = config_file;
         env.params.data_dir = data_dir.to_string_lossy().to_string();
         env.params.seal_glob =

@@ -33,4 +33,7 @@ paranoid-boot --log-level trace --attest-remote --server-url "https://127.0.0.1:
 echo "[*] Attesting ..."
 paranoid-boot --log-level trace --attest-remote --server-url "https://127.0.0.1:1443" --server-insecure attest
 
+echo "[+] All tests completed successfully!"
+
 exit 0
+

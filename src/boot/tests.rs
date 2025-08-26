@@ -6,8 +6,8 @@ use crate::{
     boot::{attest, enroll, fix},
     common::{gen_encoded_secret, normalize_ima_ng_filename, timestamp},
     env::{
-        Env, GLOBAL_VAR_IMA_EXTENDED_LOG_2, Params, ParamsIntegrtyBoot,
-        ParamsIntegrtySrv,
+        Env, GLOBAL_VAR_IMA_EXTENDED_LOG_2, Params, ParamsIntegrityBoot,
+        ParamsIntegritySrv,
     },
     server::launcher::server_launch,
 };
@@ -77,7 +77,7 @@ async fn test_actions_routes_all() {
     let conf_dir_server = tempdir().unwrap();
     let data_dir_client = tempdir().unwrap();
     let conf_dir_client = tempdir().unwrap();
-    let (env_client, env_server) = mock_environemt(
+    let (env_client, env_server) = mock_environment(
         &data_dir_server,
         &conf_dir_server,
         &data_dir_client,
@@ -120,7 +120,7 @@ async fn test_actions_routes_all() {
     let conf_dir_server = tempdir().unwrap();
     let data_dir_client = tempdir().unwrap();
     let conf_dir_client = tempdir().unwrap();
-    let (env_client, _) = mock_environemt(
+    let (env_client, _) = mock_environment(
         &data_dir_server,
         &conf_dir_server,
         &data_dir_client,
@@ -156,7 +156,7 @@ async fn test_actions_routes_all() {
     let conf_dir_server = tempdir().unwrap();
     let data_dir_client = tempdir().unwrap();
     let conf_dir_client = tempdir().unwrap();
-    let (env_client, env_server) = mock_environemt(
+    let (env_client, env_server) = mock_environment(
         &data_dir_server,
         &conf_dir_server,
         &data_dir_client,
@@ -257,13 +257,13 @@ async fn mock_ima_and_tpm_eventlog() -> Result<()> {
 }
 
 // Mock environment
-async fn mock_environemt(
+async fn mock_environment(
     data_dir_server: &TempDir,
     conf_dir_server: &TempDir,
     data_dir_client: &TempDir,
     conf_dir_client: &TempDir,
     variant: &str,
-) -> Result<(Arc<Env<ParamsIntegrtyBoot>>, Arc<Env<ParamsIntegrtySrv>>)> {
+) -> Result<(Arc<Env<ParamsIntegrityBoot>>, Arc<Env<ParamsIntegritySrv>>)> {
     let conf_file_server =
         conf_dir_server.path().to_path_buf().join("config.toml");
     create_file(&conf_file_server, "").await.unwrap();
@@ -274,7 +274,7 @@ async fn mock_environemt(
         create_dir_all(payload_store_dir).await?;
     }
 
-    let mut env_server = ParamsIntegrtySrv::new().unwrap();
+    let mut env_server = ParamsIntegritySrv::new().unwrap();
     if variant != "local" {
         env_server.common_params.config_file = conf_file_server;
         env_server.params.data_dir = data_dir_server
@@ -301,7 +301,7 @@ async fn mock_environemt(
 
     let conf_file_client =
         conf_dir_client.path().to_path_buf().join("config.toml");
-    let mut env_client = ParamsIntegrtyBoot::new().unwrap();
+    let mut env_client = ParamsIntegrityBoot::new().unwrap();
     env_client.common_params.config_file = conf_file_client;
     env_client.params.data_dir =
         data_dir_client.path().to_string_lossy().to_string();
@@ -326,7 +326,7 @@ async fn mock_environemt(
             "--server-insecure",
         ]);
         env_client.params.attest_remote = true;
-        env_client.params.server_url = Some(server_url.into());
+        env_client.params.server_url = server_url.into();
         env_client.params.server_insecure = true;
 
         if variant == "remote_full" {
@@ -348,7 +348,7 @@ async fn mock_environemt(
         }
     }
 
-    let matches = ParamsIntegrtyBoot::command().get_matches_from(&options);
+    let matches = ParamsIntegrityBoot::command().get_matches_from(&options);
     env_client.common_matches = env_client
         .params
         .populate_configuration(&matches, &Config::builder().build()?)?;

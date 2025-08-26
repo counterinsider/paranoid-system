@@ -43,7 +43,7 @@ pub async fn db_connect_sqlite(
         let schema_sql =
             include_str!("migration/sqlite/20250803_01.schema.sql").to_string()
                 + "\n";
-        
+
         warn!("[x] DATABASE DOES NOT EXIST");
         info!("Initializing database in: {}", db_path.display());
 

@@ -6,7 +6,7 @@ use crate::{
         calculate_sha256, calculate_sha512, gen_encoded_secret,
         get_unique_values, system_state_hash, timestamp,
     },
-    env::{Env as AppEnv, ParamsIntegrtySrv, constants::*},
+    env::{Env as AppEnv, ParamsIntegritySrv, constants::*},
     log::*,
     totp::TOTPInterface,
     tpm::{Quote, Tpm},
@@ -64,7 +64,7 @@ pub struct ServerError(Error);
 pub type ServerResult<T> = Result<Json<Response<T>>, ServerError>;
 
 pub type DB = Arc<DatabaseConnection>;
-pub type Env = Arc<AppEnv<ParamsIntegrtySrv>>;
+pub type Env = Arc<AppEnv<ParamsIntegritySrv>>;
 pub type ST = State<AppState>;
 
 /// Web application shared state

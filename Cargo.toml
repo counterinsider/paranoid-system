@@ -63,4 +63,4 @@ name = "paranoid-rt"
 
 [profile.release]
 codegen-units = 1
-strip = "symbols"
+# strip = "symbols"

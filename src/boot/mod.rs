@@ -6,7 +6,7 @@ use crate::tpm::Quote;
 use crate::{
     boot::ima::*,
     common::*,
-    env::{Env, ParamsIntegrtyBoot, constants::*},
+    env::{Env, ParamsIntegrityBoot, constants::*},
     log::*,
     totp::TOTPInterface,
     tpm::Tpm,
@@ -43,7 +43,7 @@ use crate::env::GLOBAL_VAR_TOTP_GENERATOR;
 // ---- actions
 
 /// Enrolls new client
-pub async fn enroll(env: Arc<Env<ParamsIntegrtyBoot>>) -> Result<()> {
+pub async fn enroll(env: Arc<Env<ParamsIntegrityBoot>>) -> Result<()> {
     info!("Starting client enrollment process ...");
     let data_dir = PathBuf::from(&env.params.data_dir);
     let identity_dir = data_dir.join("identity");
@@ -188,7 +188,7 @@ pub async fn enroll(env: Arc<Env<ParamsIntegrtyBoot>>) -> Result<()> {
 }
 
 /// Establishes new integrity baseline
-pub async fn fix(env: Arc<Env<ParamsIntegrtyBoot>>) -> Result<()> {
+pub async fn fix(env: Arc<Env<ParamsIntegrityBoot>>) -> Result<()> {
     info!("Establishing new boot integrity baseline ...");
     let data_dir = PathBuf::from(&env.params.data_dir);
     let mut q = RequestPush::default();
@@ -444,7 +444,7 @@ pub async fn fix(env: Arc<Env<ParamsIntegrtyBoot>>) -> Result<()> {
 }
 
 /// Asserts system launch state against previously established integrity baselines
-pub async fn attest(env: Arc<Env<ParamsIntegrtyBoot>>) -> Result<()> {
+pub async fn attest(env: Arc<Env<ParamsIntegrityBoot>>) -> Result<()> {
     info!(
         "Begin system launch integrity assertion against previosly established integrity baselines..."
     );
@@ -733,7 +733,7 @@ pub async fn attest(env: Arc<Env<ParamsIntegrtyBoot>>) -> Result<()> {
 }
 
 /// Cleanup client data
-pub async fn cleanup(env: Arc<Env<ParamsIntegrtyBoot>>) -> Result<()> {
+pub async fn cleanup(env: Arc<Env<ParamsIntegrityBoot>>) -> Result<()> {
     info!("Cleaning up client data directories ...");
     let data_dir = PathBuf::from(&env.params.data_dir);
     let payloads_store = PathBuf::from(CONF_CLIENT_SECURED_PAYLOADS_STORE);
@@ -862,7 +862,7 @@ where
 
 /// Read secured payloads, but ensures that it is first upload. Then encrypts them.
 async fn read_and_encrypt_payloads(
-    env: Arc<Env<ParamsIntegrtyBoot>>,
+    env: Arc<Env<ParamsIntegrityBoot>>,
 ) -> Result<(Vec<Vec<u8>>, String)> {
     let data_dir = PathBuf::from(&env.params.data_dir);
     let payload_filenames_map_file =
@@ -925,7 +925,7 @@ async fn read_and_encrypt_payloads(
 
 /// Save payloads in memory-backed filesystem and check their integrity
 async fn save_and_decrypt_payloads(
-    env: Arc<Env<ParamsIntegrtyBoot>>,
+    env: Arc<Env<ParamsIntegrityBoot>>,
     payloads: Vec<Vec<u8>>,
 ) -> Result<()> {
     #[cfg(not(test))]
@@ -987,7 +987,7 @@ async fn save_and_decrypt_payloads(
 
 /// Gives details on integrity assertion failure
 async fn describe_assertion_failure(
-    _env: Arc<Env<ParamsIntegrtyBoot>>,
+    _env: Arc<Env<ParamsIntegrityBoot>>,
     _current_tpm_log: &Vec<u8>,
     _current_ima_log: &str,
     _current_collected_ba: &str,
