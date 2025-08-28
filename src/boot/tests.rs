@@ -29,6 +29,9 @@ use tokio::{
 
 // --- Begin Tests
 
+const CONF_TEST_SECURED_PAYLOAD_PSK: &str =
+    "dontyouknowaboutquantumsuperposition";
+
 #[tokio::test]
 async fn test_tpm_policies() {
     let temp_dir = tempdir().unwrap();
@@ -345,6 +348,8 @@ async fn mock_environment(
                     .push(secure_payload_file.to_string_lossy().to_string());
             }
             env_client.params.secured_payloads = Some(secure_payloads);
+            env_client.params.secured_payloads_psk =
+                Some(CONF_TEST_SECURED_PAYLOAD_PSK.to_owned());
         }
     }
 

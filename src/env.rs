@@ -43,7 +43,8 @@ where
     pub common_matches: HashMap<String, Option<String>>,
 }
 
-/// Temp placeholder
+/// Secured payload, encrypted file stored on the attestation server and downloaded only
+/// when attestation has been completed
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct SecuredPayload {
     filename: String,
@@ -179,6 +180,7 @@ pub mod constants {
         "/run/tss/secured-payloads";
     pub const CONF_CLIENT_SECURED_PAYLOAD_FILENAMES_MAP_FILE: &str =
         "secured-payloads.list";
+    pub const CONF_CLIENT_SYMMETRIC_ENCRYPTION_IV_LEN: usize = 16;
 }
 
 pub static GLOBAL_VAR_IMA_EXTENDED_LOG: OnceLock<Vec<String>> = OnceLock::new();
@@ -379,7 +381,7 @@ impl Params for ParamsIntegrityBoot {
                         updated_options.server_insecure = v;
                     }
                 } else if option_id == "secured_payloads_psk" {
-                    if let Ok(v) = config.get(option_config_id) {
+                    if let Ok(v) = config.get::<String>(option_config_id) {
                         updated_options.secured_payloads_psk = Some(v);
                     }
                 } else if option_id == "secured_payloads" {

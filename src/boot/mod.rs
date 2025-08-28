@@ -14,6 +14,10 @@ use crate::{
 use anyhow::{Context, Result, anyhow, bail, ensure};
 use flate2::{Compression, write::GzEncoder};
 use glob::glob;
+use openssl::{
+    rand::rand_bytes,
+    symm::{Cipher, decrypt, encrypt},
+};
 use qrcode::{QrCode, render::unicode};
 use regex::Regex;
 use std::{
@@ -901,10 +905,30 @@ async fn read_and_encrypt_payloads(
                 )?;
                 payload_file.read_to_end(&mut payload).await?;
 
-                /*
-                 * TODO: payload encryption
-                 * With TPM MakeCredential or symmetric key provided in configuration option
-                 */
+                if let Some(ref keystr) = env.params.secured_payloads_psk {
+                    if keystr.len() < 8 {
+                        bail!(
+                            "Minimum 8 characters required for secured_payloads_psk option value"
+                        );
+                    }
+                    let psk = calculate_sha256(keystr.as_bytes())?;
+                    let cipher = Cipher::aes_256_cbc();
+                    let mut iv =
+                        vec![0; CONF_CLIENT_SYMMETRIC_ENCRYPTION_IV_LEN];
+                    rand_bytes(&mut iv)?;
+                    // To validate decrypted value, also use IV
+                    payload.extend_from_slice(&iv);
+                    payload = encrypt(cipher, &psk, Some(&iv), &payload)
+                        .context("Could not encrypt payload")?;
+                    iv.extend_from_slice(&payload);
+                    payload = iv;
+                    trace!("Encrypted {} bytes payload", payload.len());
+                } else {
+                    /*
+                     * TODO: payload encryption
+                     * With TPM make/activate credential
+                     */
+                }
 
                 let mut hash_filename_data = client_uuid.as_bytes().to_owned();
                 hash_filename_data.extend_from_slice(&payload);
@@ -969,6 +993,47 @@ async fn save_and_decrypt_payloads(
         let mut hash_filename_data = client_uuid.as_bytes().to_owned();
         hash_filename_data.extend_from_slice(&payload);
         let hash = hex_encode(&calculate_sha512(&hash_filename_data)?);
+
+        if let Some(ref keystr) = env.params.secured_payloads_psk {
+            if keystr.len() < 8 {
+                bail!(
+                    "Minimum 8 characters required for secured_payloads_psk option value"
+                );
+            }
+            let psk = calculate_sha256(keystr.as_bytes())?;
+            let cipher = Cipher::aes_256_cbc();
+            if payload.len() <= CONF_CLIENT_SYMMETRIC_ENCRYPTION_IV_LEN {
+                bail!(
+                    "Server returned payload, which must be properly encrypted, but it is not"
+                );
+            }
+            let iv =
+                payload[0..CONF_CLIENT_SYMMETRIC_ENCRYPTION_IV_LEN].to_owned();
+            payload =
+                payload[CONF_CLIENT_SYMMETRIC_ENCRYPTION_IV_LEN..].to_owned();
+            payload = decrypt(cipher, &psk, Some(&iv), &payload)
+                .context("Could not decrypt payload")?;
+            if payload.len() < CONF_CLIENT_SYMMETRIC_ENCRYPTION_IV_LEN {
+                warn!("Server returned spoofed payload. Skipping");
+                continue;
+            }
+            let enclosed_iv = payload
+                [payload.len() - CONF_CLIENT_SYMMETRIC_ENCRYPTION_IV_LEN..]
+                .to_owned();
+            if enclosed_iv != iv {
+                warn!("Server returned spoofed payload. Skipping");
+                continue;
+            }
+            payload =
+                payload[0..CONF_CLIENT_SYMMETRIC_ENCRYPTION_IV_LEN].to_owned();
+            trace!("Decrypted {} bytes payload", payload.len());
+        } else {
+            /*
+             * TODO: payload encryption
+             * With TPM make/activate credential
+             */
+        }
+
         if let Some(name) = filenames_map.get(&hash) {
             let mut payload_file =
                 File::create(store_dir.join(name)).await.context(format!(
@@ -977,7 +1042,7 @@ async fn save_and_decrypt_payloads(
                 ))?;
             payload_file.write_all(&payload).await?;
         } else {
-            warn!("Server returned some unknown payload. Skipping");
+            warn!("Server returned spoofed payload. Skipping");
         }
         payload.zeroize();
     }
