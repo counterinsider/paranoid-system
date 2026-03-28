@@ -450,7 +450,7 @@ pub async fn fix(env: Arc<Env<ParamsIntegrityBoot>>) -> Result<()> {
 /// Asserts system launch state against previously established integrity baselines
 pub async fn attest(env: Arc<Env<ParamsIntegrityBoot>>) -> Result<()> {
     info!(
-        "Begin system launch integrity assertion against previosly established integrity baselines..."
+        "Begin system launch integrity assertion against previously established integrity baselines..."
     );
 
     let data_dir = PathBuf::from(&env.params.data_dir);
@@ -653,7 +653,7 @@ pub async fn attest(env: Arc<Env<ParamsIntegrityBoot>>) -> Result<()> {
     if hmac_key.is_none() {
         if env.params.attest_remote {
             // Unreachable, except if
-            let err_msg = "Remote attestation succeded, but local attestation did not. Ensure, remote attestation server is not compromised";
+            let err_msg = "Remote attestation succeeded, but local attestation did not. Ensure, remote attestation server is not compromised";
             error!("{}", err_msg);
             bail!(err_msg);
         } else {
@@ -722,7 +722,7 @@ pub async fn attest(env: Arc<Env<ParamsIntegrityBoot>>) -> Result<()> {
         }
         // TODO: desktop notification that machine has been powered on besides normal boot.
     }
-
+    
     if !env.params.attest_remote {
         let mut bc_file = File::create(data_dir.join("bc.dat")).await?;
         bc_file.write_all(&q.bc.to_string().as_bytes()).await?;
@@ -864,7 +864,7 @@ where
     Ok(())
 }
 
-/// Read secured payloads, but ensures that it is first upload. Then encrypts them.
+/// Read and encrypt secured payloads, ensures that it is first upload.
 async fn read_and_encrypt_payloads(
     env: Arc<Env<ParamsIntegrityBoot>>,
 ) -> Result<(Vec<Vec<u8>>, String)> {
@@ -905,19 +905,17 @@ async fn read_and_encrypt_payloads(
                 )?;
                 payload_file.read_to_end(&mut payload).await?;
 
-                if let Some(ref keystr) = env.params.secured_payloads_psk {
-                    if keystr.len() < 8 {
+                if let Some(ref psk_str) = env.params.secured_payloads_psk {
+                    if psk_str.len() < 8 {
                         bail!(
                             "Minimum 8 characters required for secured_payloads_psk option value"
                         );
                     }
-                    let psk = calculate_sha256(keystr.as_bytes())?;
+                    let psk = calculate_sha256(psk_str.as_bytes())?;
                     let cipher = Cipher::aes_256_cbc();
                     let mut iv =
                         vec![0; CONF_CLIENT_SYMMETRIC_ENCRYPTION_IV_LEN];
                     rand_bytes(&mut iv)?;
-                    // To validate decrypted value, also use IV
-                    payload.extend_from_slice(&iv);
                     payload = encrypt(cipher, &psk, Some(&iv), &payload)
                         .context("Could not encrypt payload")?;
                     iv.extend_from_slice(&payload);
@@ -994,13 +992,13 @@ async fn save_and_decrypt_payloads(
         hash_filename_data.extend_from_slice(&payload);
         let hash = hex_encode(&calculate_sha512(&hash_filename_data)?);
 
-        if let Some(ref keystr) = env.params.secured_payloads_psk {
-            if keystr.len() < 8 {
+        if let Some(ref psk_str) = env.params.secured_payloads_psk {
+            if psk_str.len() < 8 {
                 bail!(
                     "Minimum 8 characters required for secured_payloads_psk option value"
                 );
             }
-            let psk = calculate_sha256(keystr.as_bytes())?;
+            let psk = calculate_sha256(psk_str.as_bytes())?;
             let cipher = Cipher::aes_256_cbc();
             if payload.len() <= CONF_CLIENT_SYMMETRIC_ENCRYPTION_IV_LEN {
                 bail!(
@@ -1013,19 +1011,6 @@ async fn save_and_decrypt_payloads(
                 payload[CONF_CLIENT_SYMMETRIC_ENCRYPTION_IV_LEN..].to_owned();
             payload = decrypt(cipher, &psk, Some(&iv), &payload)
                 .context("Could not decrypt payload")?;
-            if payload.len() < CONF_CLIENT_SYMMETRIC_ENCRYPTION_IV_LEN {
-                warn!("Server returned spoofed payload. Skipping");
-                continue;
-            }
-            let enclosed_iv = payload
-                [payload.len() - CONF_CLIENT_SYMMETRIC_ENCRYPTION_IV_LEN..]
-                .to_owned();
-            if enclosed_iv != iv {
-                warn!("Server returned spoofed payload. Skipping");
-                continue;
-            }
-            payload =
-                payload[0..CONF_CLIENT_SYMMETRIC_ENCRYPTION_IV_LEN].to_owned();
             trace!("Decrypted {} bytes payload", payload.len());
         } else {
             /*

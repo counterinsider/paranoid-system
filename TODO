@@ -1,13 +1,13 @@
 ### TODO list
 
+#### Common
+
 1. Analyze and audit cargo dependencies;
 1. Leverage `tokio` tracing capability;
 1. Decide integration of TSA-based functionality for client enrollment verification;
 1. Consider upgrade to `picky-asn1-x509` version `0.14.5`;
 1. EK certificate verification, AK TPM protection verification with TPM certify.
 1. Sealing under TPM compound policy `policyor`;
-1. Linux IMA subsystem auto-configuration (kernel config check and kernel parameters setup);
-1. Linux IMA policy `/etc/ima/ima-policy` assertion: ensure program config file is located on partition for which IMA measurement is set up;
 1. Stored on disk TPM (UEFI) log encryption with TPM make/activate credential functionality;
 1. Store boot counter and policy value on TPM persistent handle instead storing on disk. Additionally, encrypt the values with TPM make/activate credential;
 1. Detailed description of local attestation failure;
@@ -23,4 +23,11 @@
 1. Add server response errors in server log.
 1. Filter out log messages from `tss_esapi` crate (and library)
 
+#### Linux
 
+1. Linux IMA subsystem auto-configuration (kernel config check and kernel parameters setup);
+1. Linux IMA policy `/etc/ima/ima-policy` assertion: ensure program config file is located on partition for which IMA measurement is set up;
+
+#### Windows
+
+1. Wrap `TpmDiagnostics` functionality and integrate it into project.
