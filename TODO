@@ -30,4 +30,4 @@
 
 #### Windows
 
-1. Wrap `TpmDiagnostics` functionality and integrate it into project.
+1. Build `tss2` software stack library for Windows.

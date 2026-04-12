@@ -1,10 +1,10 @@
 ## Overview
 
-Paranoid System is a system launch and runtime integrity verification utility, leveraging hardware-based (Trusted Platform Module, TPM) and software-based (Linux IMA subsystem, Windows TpmDiagnostics tool) security technologies to ensure that system is in trusted state, from platform firmware components, bootloader, OS kernel to separate system and user files, protecting boot as well as runtime system integrity with support for remote attestation.
+Paranoid System is a system launch and runtime integrity verification utility, leveraging hardware-based (Trusted Platform Module, TPM) and software-based (Linux IMA subsystem, TSS2 Software stack) security technologies to ensure that system is in trusted state, from platform firmware components, bootloader, OS kernel to separate system and user files, protecting boot as well as runtime system integrity with support for remote attestation.
 
 ## This work is experimental
 
-The project is in **early development stage with limited functionality** and active research on runtime kernel and firmware security is ongoing. The main idea behind is to build system launch and runtime integrity remote attestation tool for desktop workstations, primarily **focused on ease of use available to non-advanced users**. Currently, there is no Linux distribution offering TPM and IMA-based protections out of the box. Users with administrator skills need to go through configuration steps and constraints implied by IMA subsystem. Windows offers [Azure Attestation](https://learn.microsoft.com/en-us/azure/attestation/). More advanced projects with similar functionality exist like:
+The project is in **early development stage with limited functionality** and active research on runtime kernel and firmware security is ongoing. The main idea behind is to build system launch and runtime integrity remote attestation tool for desktop workstations, primarily **focused on ease of use available to non-advanced users**. Currently, there is no Linux distribution offering TPM and IMA-based protections out of the box. Users with administrator skills need to go through configuration steps and constraints implied by IMA subsystem. Microsoft Windows offers [Azure Attestation](https://learn.microsoft.com/en-us/azure/attestation/). More advanced projects with similar functionality exist like:
 
 * [Keylime](https://github.com/keylime/keylime)
 * [TrenchBoot](https://github.com/TrenchBoot/documentation)
